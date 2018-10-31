@@ -39,6 +39,7 @@ import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 
+import net.furkankaplan.namaz724.data.FetchData;
 import net.furkankaplan.namaz724.network.RetrofitRxJava;
 import net.furkankaplan.namaz724.network.model.City;
 import net.furkankaplan.namaz724.network.model.SubAdminArea;
@@ -70,15 +71,12 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
 
-public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
+public class MainActivity extends Activity implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener {
 
     TextView cityTextView, subAdminAreaTextView, toWhichTimeTextView, remainTimeTextView, todayTextView;
     LinearLayout timeContainerLayout;
 
-    String countries = Data.country;
-
-    List<Time> timeList = new ArrayList<>();
 
     /**
      * Code used in requesting runtime permissions.
@@ -88,35 +86,22 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
     private static final String TAG = MainActivity.class.getSimpleName();
 
-    DateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
 
-
-    SharedPreferences sharedPrefs;
-    SharedPreferences.Editor editor;
-
-    private static boolean isAfterYatsi = false;
+    // Loglarda bu etiket kullanılacak.
+    private static final String DEBUG = "DEBUG";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        sharedPrefs =  PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        editor = sharedPrefs.edit();
+
+
+        // İleride kullanılmak üzere sharedPreferences ve editor özelliklerini kurdum.
+        // Gerekli değişkenleri de bu class üzerinden static olarak çekeceğim.
+        Defaults.setupPreferences(getApplicationContext());
 
         this.setupView();
-
-        mGoogleApiClient = new GoogleApiClient
-                .Builder(this)
-                .addApi(LocationServices.API)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .build();
-
-        mGoogleApiClient.connect();
-
-
-
         this.startToFetch();
 
     }
@@ -124,44 +109,34 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     private void  startToFetch() {
 
-        if (sharedPrefs.getString("TIME_LIST", null) != null) {
+        // Tekrar tekrar internet işlemi yapmamak adına, aylık namaz vakti verileri SharedPreferences'te tutulur.
+        // Veri string olarak json formatında saklanır ki bu şekilde parse edilmesi kolay olur.
+        // Eğer SharedPreferences'te veri yoksa API yardımıyla yeni veri çekilmesi gerekir.
+        // Bu fonksiyon bunun kontrolünü ve yönlendirmesini yapar.
+        // @if'e girerse veri zaten SharedPreferences'tedir der ve fetch işlemine başlar.
+        // Fetch işleminden sonra SharePreferences'teki veriler artık listededir. Fonksiyon listeyi doldurup Parse işlemi için ParseData class'ını çağırır.
+        // @else'e girerse veri ilk defa çekilecekir. Network işlemlerini başlatır.
+        if (Defaults.getTimeList() != null) {
 
-            Log.e("DEBUG", "TIME_LIST boş değil");
+            Log.e("TEST", Defaults.getTimeList());
+            new FetchData(this, MainActivity.this);
 
-            try {
-
-
-                if ( !isServiceWorking() ) {
-
-                    Toast.makeText(this, "STARTED", Toast.LENGTH_SHORT).show();
-                    startService(new Intent(this, MainService.class));
-
-                }
-
-
-                this.promptData(null);
-                if (sharedPrefs.getString("TIME_ADMINAREA", null) != null) {
-                    Log.e("DEBUG", "TIME_ADMINAREA boş değil");
-
-                    this.cityTextView.setText(sharedPrefs.getString("TIME_ADMINAREA", null));
-                } else {
-                    Log.e("DEBUG", "TIME_ADMINAREA boş ");
-                }
-                if (sharedPrefs.getString("TIME_SUBADMINAREA", null) != null) {
-                    this.subAdminAreaTextView.setText(sharedPrefs.getString("TIME_SUBADMINAREA", null));
-                    Log.e("DEBUG", "TIME_SUBADMINAREA boş değil");
-
-                } else {
-                    Log.e("DEBUG", "TIME_SUBADMINAREA boş ");
-                }
-
-            } catch (ParseException | JSONException e) {
-                Log.e("DEBUG", e.toString());
-            }
+            cityTextView.setText(Defaults.getAdminArea());
+            subAdminAreaTextView.setText(Defaults.getSubAdminArea());
 
         } else {
 
-            Log.e("DEBUG", "TIME_LIST boş");
+
+            // Aşağıdaki kod bloğu ve connect fonksiyonu locationChecker fonksiyonu için yaratılıyor.
+            mGoogleApiClient = new GoogleApiClient
+                    .Builder(this)
+                    .addApi(LocationServices.API)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .build();
+
+            mGoogleApiClient.connect();
+
 
             this.checkPromptInternetConnection(null);
 
@@ -169,32 +144,15 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     }
 
-    private boolean isServiceWorking() {
-
-        ActivityManager serviceManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
-
-        for (ActivityManager.RunningServiceInfo service : serviceManager.getRunningServices(Integer.MAX_VALUE) ) {
-
-            if ( getApplication().getPackageName().equals(service.service.getPackageName()) ) {
-
-                return true;
-
-            }
-
-        }
-
-        return false;
-
-    }
 
 
     private void logout() {
 
-        editor.remove("TIME_COUNTRY");
-        editor.remove("TIME_ADMINAREA");
-        editor.remove("TIME_SUBADMINAREA");
-        editor.remove("TIME_LIST");
-        editor.apply();
+        Defaults.getEditor().remove("TIME_COUNTRY");
+        Defaults.getEditor().remove("TIME_ADMINAREA");
+        Defaults.getEditor().remove("TIME_SUBADMINAREA");
+        Defaults.getEditor().remove("TIME_LIST");
+        Defaults.getEditor().apply();
 
     }
 
@@ -478,7 +436,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     }
 
 
-
+/*
     private void fillTheArea(DefaultLocation defaultLocation) {
 
         //And it will be keep running until you close the entire application from task manager.
@@ -566,507 +524,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         }
 
     }
+*/
 
 
-    private void promptData(List<Time> subAdminAreaResponse) throws ParseException, JSONException {
 
-
-        if (sharedPrefs.getString("TIME_LIST", null) != null && subAdminAreaResponse == null) {
-
-            String sharedPrefTimeList = sharedPrefs.getString("TIME_LIST", null);
-
-            JSONArray jsonArray = new JSONArray(sharedPrefTimeList);
-
-            int length = jsonArray.length();
-            for ( int i = 0; i < length; i++ ) {
-
-                JSONObject jsonObj = jsonArray.getJSONObject(i);
-                timeList.add(new Time(
-                        jsonObj.getString("gunes"),
-                        jsonObj.getString("ogle"),
-                        jsonObj.getString("ikindi"),
-                        jsonObj.getString("aksam"),
-                        jsonObj.getString("yatsi"),
-                        jsonObj.getString("tarih")
-                ));
-
-            }
-
-            Log.e("DEBUG", "SharedPreferences dolu, liste pars edildi.");
-
-
-            this.promptDataCont(timeList, false);
-
-
-            // Then, get the informations by using below codes.
-
-        } else {
-
-            // shared prefences is null, so must get the data from api.
-            // takes parameter as a last presponse of the above request chain.
-
-            if ( subAdminAreaResponse != null ) {
-
-                Log.e("DEBUG", "İlk defa veri çekilecek, işlem başlıyor.");
-
-                this.promptDataCont(subAdminAreaResponse, true);
-
-            } else {
-
-                Log.e("DEBUG", "İlk defa veri çekilecek fakat liste boş");
-
-            }
-
-        }
-
-
-    }
-
-    private void promptDataCont( List<Time> subAdminAreaResponse, boolean willBeSaved) throws ParseException {
-
-        final int sizeOfTimes = subAdminAreaResponse.size();
-
-        StringBuilder stringToSave = null;
-
-        if ( willBeSaved ) {
-            stringToSave = new StringBuilder("[");
-        }
-
-        for (int z = 0; z < sizeOfTimes; z++) {
-
-
-            Time obj3 = subAdminAreaResponse.get(z);
-
-            final String gunes = obj3.getGünes();
-            final String ogle = obj3.getOgle();
-            final String ikindi = obj3.getIkindi();
-            final String aksam = obj3.getAksam();
-            final String yatsi = obj3.getYatsi();
-            final String tarih = obj3.getTarih();
-
-            if ( willBeSaved ) {
-
-                timeList.add(new Time(
-
-                        gunes,
-
-                        ogle,
-
-                        ikindi,
-
-                        aksam,
-
-                        yatsi,
-
-                        tarih
-                ));
-
-
-                String times = "{\n" +
-                        "tarih:" + "\"" + tarih + "\"" +  ",\n" +
-                        "gunes:" + "\"" + gunes + "\"" +  ",\n" +
-                        "ogle:" + "\"" + ogle + "\"" +  ",\n" +
-                        "ikindi:" + "\"" + ikindi + "\"" +  ",\n" +
-                        "aksam:" + "\"" + aksam + "\"" +  ",\n" +
-                        "yatsi:" + "\"" + yatsi + "\"" +
-                        "}";
-
-                stringToSave.append(times);
-                if ( z != sizeOfTimes -1 ) {
-                    stringToSave.append(",");
-                } else {
-                    stringToSave.append("]");
-                }
-
-            }
-
-            SimpleDateFormat formatterForDate = new SimpleDateFormat("dd.MM.yyyy");
-            Calendar calendar = Calendar.getInstance();
-            Date  todayDate = calendar.getTime();
-            String todayString = formatterForDate.format(todayDate);
-
-            todayTextView.setText(todayString);
-
-            // Date todayDate = Calendar.getInstance().getTime();
-            // SimpleDateFormat formatterForDate = new SimpleDateFormat("dd.MM.yyyy");
-
-            // final String todayString = formatterForDate.format(todayDate);
-
-            if (tarih.equals(todayString)) {
-                SimpleDateFormat formatterForHour = new SimpleDateFormat("HH:mm:ss");
-
-                String hourString = formatterForHour.format(todayDate);
-                Date gunesDate = sdf.parse(todayString +" "+ gunes+":00");
-                Date ogleDate = sdf.parse(todayString +" "+ ogle+":00");
-                Date ikindiDate = sdf.parse(todayString +" "+ ikindi+":00");
-                Date aksamDate = sdf.parse(todayString +" "+ aksam+":00");
-                Date yatsiDate = sdf.parse(todayString +" "+ yatsi+":00");
-                Date nowDate = sdf.parse(todayString +" "+ hourString+":00");
-
-                if ( nowDate.before(gunesDate) ) {
-
-
-                    int diffInMillies =(int)(Math.abs(nowDate.getTime() - gunesDate.getTime()));
-                    this.promptTimeAndRemaining(getTimeRemainingString(diffInMillies), "Güneş");
-
-                    int delay = 0;
-                    int period = 1000;
-                    final Timer time = new Timer();
-
-                    time.scheduleAtFixedRate(new TimerTask() {
-
-                        public void run() {
-
-
-                            Calendar calendar2 = Calendar.getInstance();
-                            Date  todayDate2 = calendar2.getTime();
-                            String todayString2 = formatterForDate.format(todayDate2);
-                            String hourString2 = formatterForHour.format(todayDate2);
-                            Date nowDate2 = null;
-                            try {
-                                nowDate2 = sdf.parse(todayString2 +" "+ hourString2+":00");
-                            } catch (ParseException e) {
-                                e.printStackTrace();
-                            }
-
-                            int diffInMillies2 =(int)(Math.abs(nowDate2.getTime() - gunesDate.getTime()));
-
-                            if ( diffInMillies2 == 0 ) {
-
-
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        startToFetch();
-                                    }
-                                });
-                                time.cancel();
-                                time.purge();
-                            }
-
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    promptTimeAndRemaining(getTimeRemainingString(diffInMillies2), "Güneş");
-                                }
-                            });
-
-                        }
-                    }, delay, period);
-
-
-                } else if ( nowDate.before(ogleDate)) {
-
-                    int diffInMillies =(int)(Math.abs(nowDate.getTime() - ogleDate.getTime()));
-
-                    this.promptTimeAndRemaining(getTimeRemainingString(diffInMillies), "Öğle");
-
-
-                    int delay = 0;
-                    int period = 1000;
-                    final Timer time = new Timer();
-
-                    time.scheduleAtFixedRate(new TimerTask() {
-
-                        public void run() {
-
-
-                            Calendar calendar2 = Calendar.getInstance();
-                            Date  todayDate2 = calendar2.getTime();
-                            String todayString2 = formatterForDate.format(todayDate2);
-                            String hourString2 = formatterForHour.format(todayDate2);
-                            Date nowDate2 = null;
-                            try {
-                                nowDate2 = sdf.parse(todayString2 +" "+ hourString2+":00");
-                            } catch (ParseException e) {
-                                e.printStackTrace();
-                            }
-
-                            int diffInMillies2 =(int)(Math.abs(nowDate2.getTime() - ogleDate.getTime()));
-
-                            if ( diffInMillies2 == 0 ) {
-
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        startToFetch();
-                                    }
-                                });
-                                time.cancel();
-                                time.purge();
-                            }
-
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    promptTimeAndRemaining(getTimeRemainingString(diffInMillies2), "Öğle");
-                                }
-                            });
-
-                        }
-                    }, delay, period);
-
-
-                } else if ( nowDate.before(ikindiDate)) {
-
-                    int diffInMillies =(int)(Math.abs(nowDate.getTime() - ikindiDate.getTime()));
-
-                    this.promptTimeAndRemaining(getTimeRemainingString(diffInMillies), "İkindi");
-
-
-                    int delay = 0;
-                    int period = 1000;
-                    final Timer time = new Timer();
-
-                    time.scheduleAtFixedRate(new TimerTask() {
-
-                        public void run() {
-
-
-                            Calendar calendar2 = Calendar.getInstance();
-                            Date  todayDate2 = calendar2.getTime();
-                            String todayString2 = formatterForDate.format(todayDate2);
-                            String hourString2 = formatterForHour.format(todayDate2);
-                            Date nowDate2 = null;
-                            try {
-                                nowDate2 = sdf.parse(todayString2 +" "+ hourString2+":00");
-                            } catch (ParseException e) {
-                                e.printStackTrace();
-                            }
-
-                            int diffInMillies2 =(int)(Math.abs(nowDate2.getTime() - ikindiDate.getTime()));
-
-                            if ( diffInMillies2 == 0 ) {
-                                onCreate(new Bundle());
-
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        startToFetch();
-                                    }
-                                });
-                                time.cancel();
-                                time.purge();
-                            }
-
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    promptTimeAndRemaining(getTimeRemainingString(diffInMillies2), "İkindi");
-                                }
-                            });
-
-                        }
-                    }, delay, period);
-
-
-                } else if ( nowDate.before(aksamDate)) {
-
-                    int diffInMillies =(int)(Math.abs(nowDate.getTime() - aksamDate.getTime()));
-
-                    this.promptTimeAndRemaining(getTimeRemainingString(diffInMillies), "Akşam");
-
-
-                    int delay = 0;
-                    int period = 1000;
-                    final Timer time = new Timer();
-
-                    time.scheduleAtFixedRate(new TimerTask() {
-
-                        public void run() {
-
-
-                            Calendar calendar2 = Calendar.getInstance();
-                            Date  todayDate2 = calendar2.getTime();
-                            String todayString2 = formatterForDate.format(todayDate2);
-                            String hourString2 = formatterForHour.format(todayDate2);
-                            Date nowDate2 = null;
-                            try {
-                                nowDate2 = sdf.parse(todayString2 +" "+ hourString2+":00");
-                            } catch (ParseException e) {
-                                e.printStackTrace();
-                            }
-
-                            int diffInMillies2 =(int)(Math.abs(nowDate2.getTime() - aksamDate.getTime()));
-
-                            if ( diffInMillies2 == 0 ) {
-
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        startToFetch();
-                                    }
-                                });
-                                time.cancel();
-                                time.purge();
-                            }
-
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    promptTimeAndRemaining(getTimeRemainingString(diffInMillies2), "Akşam");
-                                }
-                            });
-
-                        }
-                    }, delay, period);
-
-
-                } else if ( nowDate.before(yatsiDate)) {
-
-                    int diffInMillies =(int)(Math.abs(nowDate.getTime() - yatsiDate.getTime()));
-
-                    this.promptTimeAndRemaining(getTimeRemainingString(diffInMillies), "Yatsı");
-
-
-                    int delay = 0;
-                    int period = 1000;
-                    final Timer time = new Timer();
-
-                    time.scheduleAtFixedRate(new TimerTask() {
-
-                        public void run() {
-
-
-                            Calendar calendar2 = Calendar.getInstance();
-                            Date  todayDate2 = calendar2.getTime();
-                            String todayString2 = formatterForDate.format(todayDate2);
-                            String hourString2 = formatterForHour.format(todayDate2);
-                            Date nowDate2 = null;
-                            try {
-                                nowDate2 = sdf.parse(todayString2 +" "+ hourString2+":00");
-                            } catch (ParseException e) {
-                                e.printStackTrace();
-                            }
-
-                            int diffInMillies2 =(int)(Math.abs(nowDate2.getTime() - yatsiDate.getTime()));
-
-                            if ( diffInMillies2 == 0 ) {
-
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        startToFetch();
-                                    }
-                                });
-                                time.cancel();
-                                time.purge();
-                            }
-
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    promptTimeAndRemaining(getTimeRemainingString(diffInMillies2), "Yatsı");
-                                }
-                            });
-
-                        }
-                    }, delay, period);
-
-                }  else {
-
-                    Calendar calendarForTomorrow = Calendar.getInstance();
-                    calendarForTomorrow.add(Calendar.DAY_OF_YEAR, 1);
-                    Date  tomorrowDate = calendarForTomorrow.getTime();
-                    String tomorrowString = formatterForDate.format(tomorrowDate);
-
-                    Date tomorrowGunesDate = sdf.parse(tomorrowString +" "+ subAdminAreaResponse.get(z+1).getGünes()+":00");
-
-                    int diffInMillies =(int)(Math.abs(nowDate.getTime() - tomorrowGunesDate.getTime()));
-
-                    this.promptTimeAndRemaining(getTimeRemainingString(diffInMillies), "Güneş");
-
-
-                    int delay = 0;
-                    int period = 1000;
-                    final Timer time = new Timer();
-
-                    time.scheduleAtFixedRate(new TimerTask() {
-
-                        public void run() {
-
-
-                            Calendar calendar2 = Calendar.getInstance();
-                            Date  todayDate2 = calendar2.getTime();
-                            String todayString2 = formatterForDate.format(todayDate2);
-                            String hourString2 = formatterForHour.format(todayDate2);
-                            Date nowDate2 = null;
-                            try {
-                                nowDate2 = sdf.parse(todayString2 +" "+ hourString2+":00");
-                            } catch (ParseException e) {
-                                e.printStackTrace();
-                            }
-
-                            int diffInMillies2 =(int)(Math.abs(nowDate2.getTime() - tomorrowGunesDate.getTime()));
-
-                            if ( diffInMillies2 == 0 ) {
-
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        startToFetch();
-                                    }
-                                });
-                                time.cancel();
-                                time.purge();
-
-                            }
-
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    promptTimeAndRemaining(getTimeRemainingString(diffInMillies2), "Güneş2");
-                                    todayTextView.setText(todayString2);
-                                }
-                            });
-
-                        }
-
-                    }, delay, period);
-
-                }
-
-            }
-
-        }
-
-        if ( willBeSaved ) {
-
-            Log.e("TEST", stringToSave.toString());
-            editor.putString("TIME_LIST", stringToSave.toString());
-            editor.apply();
-
-        }
-
-    }
-
-    public void promptTimeAndRemaining(String diff, String time) {
-
-        toWhichTimeTextView.setText(time + " Vaktine");
-        remainTimeTextView.setText(diff);
-    }
-
-    public String getTimeRemainingString(long vdiffInMillies) {
-
-        Long hour = TimeUnit.HOURS.convert(vdiffInMillies, TimeUnit.MILLISECONDS);
-        vdiffInMillies= vdiffInMillies % (1000 * 60 * 60);
-        Long minutes = TimeUnit.MINUTES.convert(vdiffInMillies, TimeUnit.MILLISECONDS);
-        vdiffInMillies= vdiffInMillies % (1000 * 60);
-        Long seconds = TimeUnit.SECONDS.convert(vdiffInMillies, TimeUnit.MILLISECONDS);
-
-        StringBuilder buffer = new StringBuilder();
-        if (hour > 0) {
-            buffer.append(hour).append(" s  ");
-        }
-        if (minutes > 0) {
-            buffer.append(minutes).append(" dk  ");
-        }
-        buffer.append(seconds).append(" sn  ");
-
-
-        return buffer.toString();
-
-    }
         @Override
     public void onConnected(@Nullable Bundle bundle) {
 
@@ -1089,13 +550,12 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
             Log.e("DEBUG", "calback çalıştı, location çekildi.");
 
-            this.fillTheArea(defaultLocation);
+            /*this.fillTheArea(defaultLocation);*/
             cityTextView.setText(defaultLocation.getCity());
             subAdminAreaTextView.setText(defaultLocation.getSubAdminArea());
-            editor.putString("TIME_COUNTRY", defaultLocation.getCountry());
-            editor.putString("TIME_ADMINAREA", defaultLocation.getCity());
-            editor.putString("TIME_SUBADMINAREA", defaultLocation.getSubAdminArea());
-            editor.apply();
+            Defaults.getEditor().putString("TIME_COUNTRY", defaultLocation.getCountry());
+            Defaults.getEditor().putString("TIME_ADMINAREA", defaultLocation.getCity());
+            Defaults.getEditor().putString("TIME_SUBADMINAREA", defaultLocation.getSubAdminArea());
 
 
         } else {
