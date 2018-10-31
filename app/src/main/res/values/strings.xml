@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Namaz 7/24</string>
+    <string name="permission_denied_explanation">permission_denied_explanation</string>
+    <string name="settings">R.string.settings</string>
+    <string name="permission_rationale">permission_rationale</string>
+    <string name="no_google_playservice_available">no_google_playservice_available</string>
+    <string name="title_alert_no_intenet">title_alert_no_intenet</string>
+    <string name="msg_alert_no_internet">msg_alert_no_internet</string>
+</resources>
