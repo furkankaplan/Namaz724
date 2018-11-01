@@ -25,7 +25,7 @@ public class RetrofitRxJava {
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
-        API = retrofit.create(RetrofitRxJavaInterface.class);
+        this.API = retrofit.create(RetrofitRxJavaInterface.class);
 
     }
 

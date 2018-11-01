@@ -16,12 +16,6 @@ public class Defaults {
 
     }
 
-    public static void commitPreferences() {
-
-        editor.apply();
-
-    }
-
     public static SharedPreferences getSharedPrefs() {
 
         return sharedPrefs;
@@ -34,10 +28,18 @@ public class Defaults {
 
     }
 
-    private static void applyEditor() {
+    public static void applyEditor() {
 
-        getEditor().apply();
+        Defaults.getEditor().apply();
 
+    }
+
+    public static void clearEditor() {
+        Defaults.getEditor().remove("TIME_COUNTRY");
+        Defaults.getEditor().remove("TIME_ADMINAREA");
+        Defaults.getEditor().remove("TIME_SUBADMINAREA");
+        Defaults.getEditor().remove("TIME_LIST");
+        Defaults.getEditor().apply();
     }
 
     //
@@ -52,7 +54,7 @@ public class Defaults {
 
     public static void setTimeList(String timeList) {
 
-         Defaults.editor.putString("TIME_LIST", timeList);
+         Defaults.getEditor().putString("TIME_LIST", timeList);
          Defaults.applyEditor();
 
     }
@@ -63,15 +65,36 @@ public class Defaults {
 
     }
 
+    public static void setAdminArea(String adminArea) {
+
+        Defaults.getEditor().putString("TIME_ADMINAREA", adminArea);
+        Defaults.applyEditor();
+
+    }
+
+
     public static String getSubAdminArea() {
 
         return Defaults.getSharedPrefs().getString("TIME_SUBADMINAREA", null);
 
     }
 
+    public static void setSubAdminArea(String subAdminArea) {
+
+        Defaults.getEditor().putString("TIME_SUBADMINAREA", subAdminArea);
+        Defaults.applyEditor();
+    }
+
     public static String getCountry() {
 
         return Defaults.getSharedPrefs().getString("TIME_COUNTRY", null);
+
+    }
+
+    public static void setCountry(String country) {
+
+        Defaults.getEditor().putString("TIME_COUNTRY", country);
+        Defaults.applyEditor();
 
     }
 

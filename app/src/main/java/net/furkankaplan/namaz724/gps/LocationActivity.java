@@ -1,6 +1,7 @@
 package net.furkankaplan.namaz724.gps;
 
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -13,6 +14,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
+import android.widget.TextView;
 
 
 import com.google.android.gms.common.ConnectionResult;
@@ -21,7 +23,10 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
+import net.furkankaplan.namaz724.Defaults;
 import net.furkankaplan.namaz724.MainActivity;
+import net.furkankaplan.namaz724.R;
+import net.furkankaplan.namaz724.data.GetData;
 import net.furkankaplan.namaz724.gps.model.DefaultLocation;
 
 import java.io.IOException;
@@ -90,18 +95,19 @@ public class LocationActivity extends AsyncTask<Void, Void, Location> implements
     protected void onPostExecute(Location location) {
         super.onPostExecute(location);
 
-        this.mCurrentLocation = location;
+        LocationActivity.mCurrentLocation = location;
         this.updateUI();
     }
 
     private void updateUI() {
         Log.e(TAG, "UI update initiated .............");
 
-        if (mCurrentLocation != null) {
+        if (LocationActivity.mCurrentLocation != null) {
+
             String lat = String.valueOf(mCurrentLocation.getLatitude());
             String lng = String.valueOf(mCurrentLocation.getLongitude());
 
-            Log.e("At Time: ",
+            Log.e(TAG,
                     "Latitude: " + lat + "\n" +
                     "Longitude: " + lng + "\n" +
                     "Accuracy: " + mCurrentLocation.getAccuracy() + "\n" +
@@ -137,6 +143,7 @@ public class LocationActivity extends AsyncTask<Void, Void, Location> implements
 
             if (addresses != null && addresses.size() > 0) {
                 for (Address adr : addresses) {
+                    String amk = adr.getLocality();
                     if (adr.getLocality() != null && adr.getLocality().length() > 0) {
 
                         String city = adr.getAdminArea();
@@ -144,19 +151,32 @@ public class LocationActivity extends AsyncTask<Void, Void, Location> implements
                         String subAdminArea = adr.getSubAdminArea();
 
 
-
                         Log.e("RESULT_COUNTRY", country);
                         Log.e("RESULT_CITY", city);
                         Log.e("RESULT_SUBADMINAREA", subAdminArea);
                         Log.e("RESULT_LOCATION", location.toString());
 
-                        mainActivity.takeItBack(
-                                new DefaultLocation(
-                                        country,
-                                        city,
-                                        subAdminArea,
-                                        location
-                                ));
+                        TextView cityTextView = ((Activity)context).findViewById(R.id.city);
+                        TextView subAdminAreaTextView = ((Activity)context).findViewById(R.id.subAdminArea);
+
+                        cityTextView.setText(city);
+                        subAdminAreaTextView.setText(subAdminArea);
+
+                        Defaults.setSubAdminArea(subAdminArea);
+                        Defaults.setAdminArea(city);
+                        Defaults.setCountry(country);
+
+                        new GetData(mainActivity).getTimeList(
+                            new DefaultLocation(
+                                    country,
+                                    city,
+                                    subAdminArea,
+                                    location
+                            )
+                        );
+
+
+
 
                     }
                 }

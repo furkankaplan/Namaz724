@@ -6,10 +6,18 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
 
+import net.furkankaplan.namaz724.Data;
 import net.furkankaplan.namaz724.Defaults;
 import net.furkankaplan.namaz724.MainActivity;
 import net.furkankaplan.namaz724.R;
+import net.furkankaplan.namaz724.gps.model.DefaultLocation;
+import net.furkankaplan.namaz724.network.RetrofitRxJava;
+import net.furkankaplan.namaz724.network.model.City;
+import net.furkankaplan.namaz724.network.model.SubAdminArea;
 import net.furkankaplan.namaz724.network.model.Time;
+
+import org.json.JSONArray;
+import org.json.JSONException;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -21,8 +29,13 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
+
 public class ParsData {
 
+    private static final String TAG = "ParsData";
     Context context;
     MainActivity activity;
 
@@ -91,7 +104,7 @@ public class ParsData {
             // For döngüsünde bugünün vakitlerine ulaşıp Parse etmek için bugünün tarihini buluyoruz.
             String todayString = getTodayDateString();
 
-            TextView todayTextView = (TextView) ((Activity)context).findViewById(R.id.today);
+            TextView todayTextView = ((Activity)context).findViewById(R.id.today);
             todayTextView.setText(todayString);
 
 
@@ -174,6 +187,8 @@ public class ParsData {
         if ( willBeSaved ) {
 
             Defaults.setTimeList(stringToSave.toString());
+
+            Log.e(TAG, stringToSave.toString());
 
         }
 
@@ -262,4 +277,6 @@ public class ParsData {
         }, delay, period);
 
     }
+
+
 }
