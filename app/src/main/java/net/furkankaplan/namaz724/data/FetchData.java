@@ -2,12 +2,14 @@ package net.furkankaplan.namaz724.data;
 
 import android.app.ActivityManager;
 import android.content.Context;
+import android.content.Intent;
 import android.util.Log;
 
 
 import net.furkankaplan.namaz724.Defaults;
 import net.furkankaplan.namaz724.MainActivity;
 import net.furkankaplan.namaz724.network.model.Time;
+import net.furkankaplan.namaz724.service.MainService;
 
 
 import org.json.JSONArray;
@@ -41,12 +43,16 @@ public class FetchData {
 
         try {
 
-            if ( !isServiceWorking() ) {
+            if (context != null) {
+                if (!isServiceWorking()) {
 
-                //Toast.makeText(context, "SERVICE STARTED", Toast.LENGTH_SHORT).show();
-                //context.startService(new Intent(context, MainService.class));
+                    //Toast.makeText(context, "SERVICE STARTED", Toast.LENGTH_SHORT).show();
+                    context.startService(new Intent(context, MainService.class));
 
+                }
             }
+
+            Log.e(TAG, " çalışmaya devam ediyor  ");
 
 
             String sharedPrefTimeList = Defaults.getTimeList();

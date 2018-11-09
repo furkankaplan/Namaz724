@@ -2,22 +2,13 @@ package net.furkankaplan.namaz724.data;
 
 import android.app.Activity;
 import android.content.Context;
-import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
 
-import net.furkankaplan.namaz724.Data;
 import net.furkankaplan.namaz724.Defaults;
 import net.furkankaplan.namaz724.MainActivity;
 import net.furkankaplan.namaz724.R;
-import net.furkankaplan.namaz724.gps.model.DefaultLocation;
-import net.furkankaplan.namaz724.network.RetrofitRxJava;
-import net.furkankaplan.namaz724.network.model.City;
-import net.furkankaplan.namaz724.network.model.SubAdminArea;
 import net.furkankaplan.namaz724.network.model.Time;
-
-import org.json.JSONArray;
-import org.json.JSONException;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -29,15 +20,11 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
-
 public class ParsData {
 
     private static final String TAG = "ParsData";
-    Context context;
-    MainActivity activity;
+    private Context context;
+    private MainActivity activity;
 
     // Bu constructer, pars işlemi içi 2 türlü kullanılıyor.
     // İlki SharedPreferences doludur ve veriler FetchData ile çekilip liste bu constructor'a willBeSaved = false olarak aktarılır.
@@ -103,10 +90,10 @@ public class ParsData {
 
             // For döngüsünde bugünün vakitlerine ulaşıp Parse etmek için bugünün tarihini buluyoruz.
             String todayString = getTodayDateString();
-
-            TextView todayTextView = ((Activity)context).findViewById(R.id.today);
-            todayTextView.setText(todayString);
-
+            if (context != null) {
+                TextView todayTextView = ((Activity) context).findViewById(R.id.today);
+                todayTextView.setText(todayString);
+            }
 
             if (tarih.equals(todayString)) {
 
@@ -122,7 +109,10 @@ public class ParsData {
 
                     int diffInMillies =(int)(Math.abs(nowDate.getTime() - gunesDate.getTime()));
 
-                    this.promptTimeAndRemaining(getTimeRemainingString(diffInMillies), "Güneş");
+                    if (context != null) {
+                        this.promptTimeAndRemaining(getTimeRemainingString(diffInMillies), "Güneş");
+                    }
+
 
                     runTimer(gunesDate, "Güneş");
 
@@ -131,34 +121,35 @@ public class ParsData {
 
                     int diffInMillies =(int)(Math.abs(nowDate.getTime() - ogleDate.getTime()));
 
-                    this.promptTimeAndRemaining(getTimeRemainingString(diffInMillies), "Öğle");
-
+                    if (context != null) {
+                        this.promptTimeAndRemaining(getTimeRemainingString(diffInMillies), "Öğle");
+                    }
                     runTimer(ogleDate, "Öğle");
 
 
                 } else if ( nowDate.before(ikindiDate)) {
 
                     int diffInMillies =(int)(Math.abs(nowDate.getTime() - ikindiDate.getTime()));
-
-                    this.promptTimeAndRemaining(getTimeRemainingString(diffInMillies), "İkindi");
-
+                    if (context != null) {
+                        this.promptTimeAndRemaining(getTimeRemainingString(diffInMillies), "İkindi");
+                    }
                     runTimer(ikindiDate, "İkindi");
 
 
                 } else if ( nowDate.before(aksamDate)) {
 
                     int diffInMillies =(int)(Math.abs(nowDate.getTime() - aksamDate.getTime()));
-
-                    this.promptTimeAndRemaining(getTimeRemainingString(diffInMillies), "Akşam");
-
+                    if (context != null) {
+                        this.promptTimeAndRemaining(getTimeRemainingString(diffInMillies), "Akşam");
+                    }
                     runTimer(aksamDate, "Akşam");
 
                 } else if ( nowDate.before(yatsiDate)) {
 
                     int diffInMillies =(int)(Math.abs(nowDate.getTime() - yatsiDate.getTime()));
-
-                    this.promptTimeAndRemaining(getTimeRemainingString(diffInMillies), "Yatsı");
-
+                    if (context != null) {
+                        this.promptTimeAndRemaining(getTimeRemainingString(diffInMillies), "Yatsı");
+                    }
 
                     runTimer(yatsiDate, "Yatsı");
 
@@ -173,9 +164,9 @@ public class ParsData {
                     Date tomorrowGunesDate = formatterForDateHour.parse(tomorrowString + " " + fetchedlist.get(z+1).getGünes() + SECOND_STRING);
 
                     int diffInMillies =(int)(Math.abs(nowDate.getTime() - tomorrowGunesDate.getTime()));
-
-                    this.promptTimeAndRemaining(getTimeRemainingString(diffInMillies), "Güneş");
-
+                    if (context != null) {
+                        this.promptTimeAndRemaining(getTimeRemainingString(diffInMillies), "Güneş");
+                    }
                     runTimer(tomorrowGunesDate, "Güneş");
 
                 }
@@ -265,13 +256,16 @@ public class ParsData {
                     time.cancel();
                     time.purge();
                 }
-
-                activity.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        promptTimeAndRemaining(getTimeRemainingString(diffInMillies), vakitName);
-                    }
-                });
+                if (context != null) {
+                    activity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            promptTimeAndRemaining(getTimeRemainingString(diffInMillies), vakitName);
+                        }
+                    });
+                } else {
+                    Log.e(TAG, diffInMillies + " to " + vakitName);
+                }
 
             }
         }, delay, period);

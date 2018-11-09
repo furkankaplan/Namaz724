@@ -25,7 +25,6 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
-import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
@@ -33,7 +32,7 @@ import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 
 import net.furkankaplan.namaz724.BuildConfig;
-import net.furkankaplan.namaz724.Data;
+import net.furkankaplan.namaz724.GlobalVariables;
 import net.furkankaplan.namaz724.MainActivity;
 import net.furkankaplan.namaz724.R;
 import net.furkankaplan.namaz724.gps.LocationActivity;
@@ -348,7 +347,7 @@ public class GetData extends Activity implements
 
             JSONArray jsonArray = null; // it contains the json of the countries.
             try {
-                jsonArray = new JSONArray(Data.country);
+                jsonArray = new JSONArray(GlobalVariables.country);
 
                 final int sizeOfCountries = jsonArray.length();
 

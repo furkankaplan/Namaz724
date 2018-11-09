@@ -39,6 +39,7 @@ import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 
+import net.furkankaplan.namaz724.data.Data;
 import net.furkankaplan.namaz724.data.FetchData;
 import net.furkankaplan.namaz724.data.GetData;
 import net.furkankaplan.namaz724.network.RetrofitRxJava;
@@ -117,20 +118,11 @@ public class MainActivity extends Activity {
         // @if'e girerse veri zaten SharedPreferences'tedir der ve fetch işlemine başlar.
         // Fetch işleminden sonra SharePreferences'teki veriler artık listededir. Fonksiyon listeyi doldurup Parse işlemi için ParseData class'ını çağırır.
         // @else'e girerse veri ilk defa çekilecekir. Network işlemlerini başlatır.
-        if (Defaults.getTimeList() != null) {
-
-            Log.e("TEST", Defaults.getTimeList());
-            cityTextView.setText(Defaults.getAdminArea());
-            subAdminAreaTextView.setText(Defaults.getSubAdminArea());
-            new FetchData(this, MainActivity.this);
 
 
+        new Data(MainActivity.this, this);
 
-        } else {
 
-            new GetData(this, MainActivity.this);
-
-        }
 
     }
 

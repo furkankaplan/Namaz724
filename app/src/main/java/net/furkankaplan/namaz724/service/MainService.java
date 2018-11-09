@@ -19,6 +19,7 @@ import android.widget.Toast;
 
 import net.furkankaplan.namaz724.MainActivity;
 import net.furkankaplan.namaz724.R;
+import net.furkankaplan.namaz724.data.Data;
 import net.furkankaplan.namaz724.network.model.Time;
 
 import org.json.JSONArray;
@@ -64,24 +65,7 @@ public class MainService extends Service {
         handler = new Handler(Looper.getMainLooper());
 
 
-        if (sharedPrefs.getString("TIME_LIST", null) != null) {
-
-            Log.e("SERVICE", "TIME_LIST boş değil");
-
-            try {
-
-                this.promptData(null);
-
-            } catch (ParseException | JSONException e) {
-                Log.e("DEBUG", e.toString());
-            }
-
-        } else {
-
-            Log.e("SERVICE", "TIME_LIST boş");
-            // this.checkPromptInternetConnection(null);
-
-        }
+        new Data(null, null);
 
 
     }
