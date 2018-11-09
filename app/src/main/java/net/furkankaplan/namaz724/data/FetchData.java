@@ -49,13 +49,17 @@ public class FetchData {
                     //Toast.makeText(context, "SERVICE STARTED", Toast.LENGTH_SHORT).show();
                     context.startService(new Intent(context, MainService.class));
 
+                    Log.e("SERVICE", "STARTED" );
                 }
             }
 
             Log.e(TAG, " çalışmaya devam ediyor  ");
 
 
-            String sharedPrefTimeList = Defaults.getTimeList();
+            Defaults defaults = new Defaults();
+            defaults.setupPreferences( context );
+
+            String sharedPrefTimeList = defaults.getTimeList();
 
             JSONArray jsonArray = new JSONArray(sharedPrefTimeList);
 

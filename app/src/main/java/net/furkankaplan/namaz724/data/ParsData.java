@@ -90,7 +90,7 @@ public class ParsData {
 
             // For döngüsünde bugünün vakitlerine ulaşıp Parse etmek için bugünün tarihini buluyoruz.
             String todayString = getTodayDateString();
-            if (context != null) {
+            if (context != null && activity != null) {
                 TextView todayTextView = ((Activity) context).findViewById(R.id.today);
                 todayTextView.setText(todayString);
             }
@@ -109,7 +109,7 @@ public class ParsData {
 
                     int diffInMillies =(int)(Math.abs(nowDate.getTime() - gunesDate.getTime()));
 
-                    if (context != null) {
+                    if (context != null && activity != null) {
                         this.promptTimeAndRemaining(getTimeRemainingString(diffInMillies), "Güneş");
                     }
 
@@ -121,7 +121,7 @@ public class ParsData {
 
                     int diffInMillies =(int)(Math.abs(nowDate.getTime() - ogleDate.getTime()));
 
-                    if (context != null) {
+                    if (context != null && activity != null) {
                         this.promptTimeAndRemaining(getTimeRemainingString(diffInMillies), "Öğle");
                     }
                     runTimer(ogleDate, "Öğle");
@@ -130,7 +130,7 @@ public class ParsData {
                 } else if ( nowDate.before(ikindiDate)) {
 
                     int diffInMillies =(int)(Math.abs(nowDate.getTime() - ikindiDate.getTime()));
-                    if (context != null) {
+                    if (context != null && activity != null) {
                         this.promptTimeAndRemaining(getTimeRemainingString(diffInMillies), "İkindi");
                     }
                     runTimer(ikindiDate, "İkindi");
@@ -139,7 +139,7 @@ public class ParsData {
                 } else if ( nowDate.before(aksamDate)) {
 
                     int diffInMillies =(int)(Math.abs(nowDate.getTime() - aksamDate.getTime()));
-                    if (context != null) {
+                    if (context != null && activity != null) {
                         this.promptTimeAndRemaining(getTimeRemainingString(diffInMillies), "Akşam");
                     }
                     runTimer(aksamDate, "Akşam");
@@ -147,7 +147,7 @@ public class ParsData {
                 } else if ( nowDate.before(yatsiDate)) {
 
                     int diffInMillies =(int)(Math.abs(nowDate.getTime() - yatsiDate.getTime()));
-                    if (context != null) {
+                    if (context != null && activity != null) {
                         this.promptTimeAndRemaining(getTimeRemainingString(diffInMillies), "Yatsı");
                     }
 
@@ -164,7 +164,7 @@ public class ParsData {
                     Date tomorrowGunesDate = formatterForDateHour.parse(tomorrowString + " " + fetchedlist.get(z+1).getGünes() + SECOND_STRING);
 
                     int diffInMillies =(int)(Math.abs(nowDate.getTime() - tomorrowGunesDate.getTime()));
-                    if (context != null) {
+                    if (context != null && activity != null) {
                         this.promptTimeAndRemaining(getTimeRemainingString(diffInMillies), "Güneş");
                     }
                     runTimer(tomorrowGunesDate, "Güneş");
@@ -177,7 +177,9 @@ public class ParsData {
 
         if ( willBeSaved ) {
 
-            Defaults.setTimeList(stringToSave.toString());
+            Defaults defaults = new Defaults();
+            defaults.setupPreferences( context );
+            defaults.setTimeList(stringToSave.toString());
 
             Log.e(TAG, stringToSave.toString());
 
@@ -241,11 +243,16 @@ public class ParsData {
 
             public void run() {
 
-                Date nowDate = getTodayDate();
+                Date nowDate = null;
+                try {
+                    nowDate = formatterForDateHour.parse(getTodayDateStringWithSecond());
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
 
                 int diffInMillies =(int)(Math.abs(nowDate.getTime() - vakitDate.getTime()));
 
-                if ( diffInMillies == 0 ) {
+                if ( diffInMillies == 0 && context != null && activity != null) {
 
                     activity.runOnUiThread(new Runnable() {
                         @Override
@@ -256,7 +263,8 @@ public class ParsData {
                     time.cancel();
                     time.purge();
                 }
-                if (context != null) {
+
+                if (context != null && activity != null) {
                     activity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -265,6 +273,10 @@ public class ParsData {
                     });
                 } else {
                     Log.e(TAG, diffInMillies + " to " + vakitName);
+                }
+
+                if ( diffInMillies == (1000 * 60 * 30) ) {
+                    Log.e(TAG,"Yarım saat to " + vakitName);
                 }
 
             }

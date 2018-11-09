@@ -162,9 +162,12 @@ public class LocationActivity extends AsyncTask<Void, Void, Location> implements
                         cityTextView.setText(city);
                         subAdminAreaTextView.setText(subAdminArea);
 
-                        Defaults.setSubAdminArea(subAdminArea);
-                        Defaults.setAdminArea(city);
-                        Defaults.setCountry(country);
+                        Defaults defaults = new Defaults();
+                        defaults.setupPreferences(context);
+
+                        defaults.setSubAdminArea(subAdminArea);
+                        defaults.setAdminArea(city);
+                        defaults.setCountry(country);
 
                         new GetData(mainActivity).getTimeList(
                             new DefaultLocation(

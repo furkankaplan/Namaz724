@@ -9,7 +9,7 @@ import net.furkankaplan.namaz724.Defaults;
 import net.furkankaplan.namaz724.MainActivity;
 import net.furkankaplan.namaz724.R;
 
-public class Data {
+public class Data extends Activity{
 
     MainActivity activity;
     Context context;
@@ -18,15 +18,18 @@ public class Data {
         this.activity = activity;
         this.context = context;
 
-        if (Defaults.getTimeList() != null) {
+        Defaults defaults = new Defaults();
+        defaults.setupPreferences( context );
 
-            if (context != null) {
+        if (defaults.getTimeList() != null) {
+
+            if (context != null && activity != null) {
 
                 TextView cityTextView = ((Activity)context).findViewById(R.id.city);
-                cityTextView.setText(Defaults.getAdminArea());
+                cityTextView.setText(defaults.getAdminArea());
 
                 TextView subAdminAreaTextView = ((Activity)context).findViewById(R.id.subAdminArea);
-                subAdminAreaTextView.setText(Defaults.getSubAdminArea());
+                subAdminAreaTextView.setText(defaults.getSubAdminArea());
 
             }
 

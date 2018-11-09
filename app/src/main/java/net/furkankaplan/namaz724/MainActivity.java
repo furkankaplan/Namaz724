@@ -89,7 +89,6 @@ public class MainActivity extends Activity {
 
         // İleride kullanılmak üzere sharedPreferences ve editor özelliklerini kurdum.
         // Gerekli değişkenleri de bu class üzerinden static olarak çekeceğim.
-        Defaults.setupPreferences(getApplicationContext());
 
 //        Defaults.clearEditor();
 
