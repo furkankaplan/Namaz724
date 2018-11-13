@@ -2,13 +2,16 @@ package net.furkankaplan.namaz724.data;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.util.Log;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import net.furkankaplan.namaz724.Defaults;
 import net.furkankaplan.namaz724.MainActivity;
 import net.furkankaplan.namaz724.R;
 import net.furkankaplan.namaz724.network.model.Time;
+import net.furkankaplan.namaz724.service.MainService;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -183,6 +186,14 @@ public class ParsData {
 
             Log.e(TAG, stringToSave.toString());
 
+            if (context != null) {
+                    //Toast.makeText(context, "SERVICE STARTED", Toast.LENGTH_SHORT).show();
+                    context.startService(new Intent(context, MainService.class));
+
+                    Log.e("SERVICE", "STARTED" );
+
+            }
+
         }
 
     }
@@ -265,18 +276,41 @@ public class ParsData {
                 }
 
                 if (context != null && activity != null) {
+
                     activity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+
                             promptTimeAndRemaining(getTimeRemainingString(diffInMillies), vakitName);
+
                         }
                     });
+
                 } else {
+
                     Log.e(TAG, diffInMillies + " to " + vakitName);
+
                 }
 
                 if ( diffInMillies == (1000 * 60 * 30) ) {
                     Log.e(TAG,"Yarım saat to " + vakitName);
+
+                    // TODO push notification
+
+                    if (context != null && activity != null) {
+
+                        activity.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+
+                                Toast.makeText(context, "Yarım saat to " + vakitName, Toast.LENGTH_SHORT).show();
+
+
+                            }
+                        });
+
+                    }
+
                 }
 
             }

@@ -144,4 +144,9 @@ public class MainActivity extends Activity {
     }
 
 
+    public void refresh(View view) {
+
+        new GetData(MainActivity.this, this);
+
+    }
 }
