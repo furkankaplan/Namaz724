@@ -1,8 +1,12 @@
 package net.furkankaplan.namaz724.data;
 
 import android.app.Activity;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -258,12 +262,13 @@ public class ParsData {
                 try {
                     nowDate = formatterForDateHour.parse(getTodayDateStringWithSecond());
                 } catch (ParseException e) {
-                    e.printStackTrace();
+                    Log.e("ERR", e.toString());
                 }
 
-                int diffInMillies =(int)(Math.abs(nowDate.getTime() - vakitDate.getTime()));
 
-                if ( diffInMillies == 0 && context != null && activity != null) {
+                long diffInMillies = (Math.abs(nowDate.getTime() - vakitDate.getTime()));
+
+                if ( diffInMillies == 0 && activity != null) {
 
                     activity.runOnUiThread(new Runnable() {
                         @Override
@@ -275,7 +280,7 @@ public class ParsData {
                     time.purge();
                 }
 
-                if (context != null && activity != null) {
+                if (activity != null && diffInMillies > 0) {
 
                     activity.runOnUiThread(new Runnable() {
                         @Override
@@ -293,24 +298,47 @@ public class ParsData {
                 }
 
                 if ( diffInMillies == (1000 * 60 * 30) ) {
+
                     Log.e(TAG,"Yarım saat to " + vakitName);
 
-                    // TODO push notification
-
-                    if (context != null && activity != null) {
+                    if (activity != null) {
 
                         activity.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
 
-                                Toast.makeText(context, "Yarım saat to " + vakitName, Toast.LENGTH_SHORT).show();
+
+                                Toast.makeText(context, vakitName + " vaktine yarım saat kaldı kardeşim.", Toast.LENGTH_SHORT).show();
 
 
                             }
                         });
 
-                    }
+                    } else {
 
+                        // TODO push notification
+
+                        Intent intent = new Intent(context, MainActivity.class);
+                        PendingIntent contentIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+                        NotificationCompat.Builder b = new NotificationCompat.Builder(context);
+
+                        b.setAutoCancel(true)
+                                .setDefaults(Notification.DEFAULT_ALL)
+                                .setWhen(System.currentTimeMillis())
+                                .setSmallIcon(R.mipmap.ic_launcher)
+                                .setTicker(vakitName + " vaktine 30 dakika kaldı kardeşim.")
+                                .setContentTitle("Namaz 7/24")
+                                .setContentText(vakitName + " vaktine 30 dakika kaldı kardeşim.")
+                                .setDefaults(Notification.DEFAULT_LIGHTS| Notification.DEFAULT_SOUND)
+                                .setContentIntent(contentIntent)
+                                .setContentInfo("Info");
+
+                        NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+                        notificationManager.notify(1, b.build());
+
+
+                    }
                 }
 
             }
