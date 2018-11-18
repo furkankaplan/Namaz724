@@ -4,8 +4,12 @@ import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.net.wifi.WifiManager;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.TextView;
@@ -25,13 +29,20 @@ import java.util.Date;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+
 
 public class ParsData {
 
     private static final String TAG = "ParsData";
     private Context context;
     private MainActivity activity;
+    private Handler handler = new Handler(Looper.getMainLooper());
+
 
     // Bu constructer, pars işlemi içi 2 türlü kullanılıyor.
     // İlki SharedPreferences doludur ve veriler FetchData ile çekilip liste bu constructor'a willBeSaved = false olarak aktarılır.
@@ -45,7 +56,7 @@ public class ParsData {
 
     private final static String SECOND_STRING = ":00";
 
-    public ParsData(Context context, MainActivity activity, List<Time> fetchedlist, boolean willBeSaved ) throws ParseException {
+    public ParsData(Context context, MainActivity activity, List<Time> fetchedlist, boolean willBeSaved, ProgressDialog progressDialog) throws ParseException {
 
         this.context = context;
         this.activity = activity;
@@ -142,6 +153,7 @@ public class ParsData {
                     }
                     runTimer(ikindiDate, "İkindi");
 
+                    Log.e("ZIC", "TIM");
 
                 } else if ( nowDate.before(aksamDate)) {
 
@@ -178,7 +190,7 @@ public class ParsData {
 
                 }
 
-            }
+            } 
 
         }
 
@@ -187,9 +199,7 @@ public class ParsData {
             Defaults defaults = new Defaults();
             defaults.setupPreferences( context );
             defaults.setTimeList(stringToSave.toString());
-
-            Log.e(TAG, stringToSave.toString());
-
+            progressDialog.dismiss();
             if (context != null) {
                     //Toast.makeText(context, "SERVICE STARTED", Toast.LENGTH_SHORT).show();
                     context.startService(new Intent(context, MainService.class));
@@ -250,9 +260,10 @@ public class ParsData {
 
     private void runTimer( Date vakitDate , String vakitName) {
 
-        int delay = 0;
+        int delay = 1000;
         int period = 1000;
         final Timer time = new Timer();
+
 
         time.scheduleAtFixedRate(new TimerTask() {
 
@@ -265,19 +276,38 @@ public class ParsData {
                     Log.e("ERR", e.toString());
                 }
 
-
                 long diffInMillies = (Math.abs(nowDate.getTime() - vakitDate.getTime()));
 
-                if ( diffInMillies == 0 && activity != null) {
+                if ( diffInMillies == 0 && activity != null) { // Uygulama ekranı açık vaziyette.
 
                     activity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+
                             new FetchData(context, activity);
+
                         }
                     });
+
                     time.cancel();
                     time.purge();
+
+                } else if (diffInMillies == 0) { // Servis çalışıyor.
+
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+
+                            new FetchData(context, activity);
+
+                        }
+                    });
+
+                    Log.e(TAG, "Vakit bitti, yeni zamana geçilecek.");
+
+                    time.cancel();
+                    time.purge();
+
                 }
 
                 if (activity != null && diffInMillies > 0) {
@@ -292,6 +322,8 @@ public class ParsData {
                     });
 
                 } else {
+
+                    Log.e("TEST",  nowDate.getTime() + " to " + vakitDate.getTime());
 
                     Log.e(TAG, diffInMillies + " to " + vakitName);
 
@@ -337,8 +369,9 @@ public class ParsData {
                         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
                         notificationManager.notify(1, b.build());
 
-
                     }
+
+
                 }
 
             }

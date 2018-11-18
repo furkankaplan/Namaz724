@@ -3,6 +3,7 @@ package net.furkankaplan.namaz724.data;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
 import android.util.Log;
 
 
@@ -37,21 +38,21 @@ public class FetchData {
     private static final String YATSI = "yatsi";
     private static final String TARIH = "tarih";
 
-    public FetchData( Context context, MainActivity activity ) {
+    public FetchData(Context context, MainActivity activity) {
 
         this.context = context;
 
         try {
 
-            if (context != null) {
-                if (!isServiceWorking()) {
 
-                    //Toast.makeText(context, "SERVICE STARTED", Toast.LENGTH_SHORT).show();
-                    context.startService(new Intent(context, MainService.class));
+            if (!isServiceWorking()) {
 
-                    Log.e("SERVICE", "STARTED" );
-                }
+                //Toast.makeText(context, "SERVICE STARTED", Toast.LENGTH_SHORT).show();
+                context.startService(new Intent(context, MainService.class));
+
+                Log.e("SERVICE", "STARTED" );
             }
+
 
             Log.e(TAG, " çalışmaya devam ediyor  ");
 
@@ -78,7 +79,7 @@ public class FetchData {
                 ));
             }
 
-            new ParsData(context, activity, timeList, false);
+            new ParsData(context, activity, timeList, false, null);
 
 
 

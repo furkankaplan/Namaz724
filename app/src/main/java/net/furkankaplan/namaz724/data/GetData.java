@@ -2,6 +2,7 @@ package net.furkankaplan.namaz724.data;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -11,6 +12,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -337,7 +339,7 @@ public class GetData extends Activity implements
     }
 
 
-    public void getTimeList(DefaultLocation defaultLocation) {
+    public void getTimeList(DefaultLocation defaultLocation, ProgressDialog progressDialog) {
 
         //And it will be keep running until you close the entire application from task manager.
         //This method will executed only once.
@@ -396,7 +398,7 @@ public class GetData extends Activity implements
                                                                                 .getTimes(subAdminAreaID)
                                                                                 .subscribeOn(Schedulers.io())
                                                                                 .observeOn(AndroidSchedulers.mainThread())
-                                                                                .subscribe(times -> new ParsData(activity, activity, times, true));
+                                                                                .subscribe(times -> new ParsData(activity, activity, times, true, progressDialog));
 
                                                                     }
 

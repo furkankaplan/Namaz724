@@ -2,12 +2,14 @@ package net.furkankaplan.namaz724.data;
 
 import android.app.Activity;
 import android.content.Context;
+import android.os.Handler;
 import android.util.Log;
 import android.widget.TextView;
 
 import net.furkankaplan.namaz724.Defaults;
 import net.furkankaplan.namaz724.MainActivity;
 import net.furkankaplan.namaz724.R;
+
 
 public class Data extends Activity{
 
@@ -30,6 +32,10 @@ public class Data extends Activity{
 
                 TextView subAdminAreaTextView = ((Activity)context).findViewById(R.id.subAdminArea);
                 subAdminAreaTextView.setText(defaults.getSubAdminArea());
+
+            } else {
+
+                Log.e("DATA", defaults.getTimeList());
 
             }
 

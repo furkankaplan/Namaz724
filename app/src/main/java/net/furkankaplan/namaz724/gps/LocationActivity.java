@@ -70,7 +70,7 @@ public class LocationActivity extends AsyncTask<Void, Void, Location> implements
         super.onPreExecute();
 
         progressDialog = new ProgressDialog(context);
-        progressDialog.setMessage("Please Wait...");
+        progressDialog.setMessage("Güncel veriler çekiliyor...");
         progressDialog.setCancelable(false);
         progressDialog.show();
     }
@@ -116,7 +116,7 @@ public class LocationActivity extends AsyncTask<Void, Void, Location> implements
 
             this.getGEO(mCurrentLocation);
 
-            progressDialog.dismiss();
+
             if ( mGoogleApiClient.isConnected() ) {
                 LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient,this);
             }
@@ -175,9 +175,8 @@ public class LocationActivity extends AsyncTask<Void, Void, Location> implements
                                     city,
                                     subAdminArea,
                                     location
-                            )
+                            ), progressDialog
                         );
-
 
 
 

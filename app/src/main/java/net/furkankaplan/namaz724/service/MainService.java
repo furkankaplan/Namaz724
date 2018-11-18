@@ -39,7 +39,6 @@ import java.util.concurrent.TimeUnit;
 
 public class MainService extends Service {
 
-    Handler handler = null;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -50,13 +49,7 @@ public class MainService extends Service {
     public void onCreate() {
         super.onCreate();
 
-
-
-        handler = new Handler(Looper.getMainLooper());
-
-
         new Data(null, this);
-
 
     }
 

@@ -119,9 +119,7 @@ public class MainActivity extends Activity {
         // @else'e girerse veri ilk defa çekilecekir. Network işlemlerini başlatır.
 
 
-        new Data(MainActivity.this, this);
-
-
+        new GetData(this, MainActivity.this);
 
     }
 
@@ -143,10 +141,4 @@ public class MainActivity extends Activity {
 
     }
 
-
-    public void refresh(View view) {
-
-        new GetData(MainActivity.this, this);
-
-    }
 }
