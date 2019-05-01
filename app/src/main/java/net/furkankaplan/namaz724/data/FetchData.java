@@ -57,10 +57,13 @@ public class FetchData {
             Log.e(TAG, " çalışmaya devam ediyor  ");
 
 
+
             Defaults defaults = new Defaults();
             defaults.setupPreferences( context );
 
             String sharedPrefTimeList = defaults.getTimeList();
+
+            Log.w(TAG, sharedPrefTimeList);
 
             JSONArray jsonArray = new JSONArray(sharedPrefTimeList);
 
@@ -81,11 +84,9 @@ public class FetchData {
 
             new ParsData(context, activity, timeList, false, null);
 
-
-
-
         } catch (ParseException | JSONException e) {
             Log.e(TAG, e.toString());
+            Log.e(TAG, e.getLocalizedMessage());
         }
 
     }

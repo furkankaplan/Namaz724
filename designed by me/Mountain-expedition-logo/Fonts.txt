@@ -1,0 +1,6 @@
+Fonts used in this design;
+
+Font: Arvo, 
+Author: Anton Koovit, 
+Url: http://www.fontsquirrel.com/fonts/arvo; 
+

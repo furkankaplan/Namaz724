@@ -43,6 +43,31 @@ public class ParsData {
     private MainActivity activity;
     private Handler handler = new Handler(Looper.getMainLooper());
 
+    private long diffInMillies = 0;
+    private long diffInMilliesTemp = 0;
+
+    private Date nowDate = null;
+    private Date gunesDate = null;
+    private Date ogleDate = null;
+    private Date ikindiDate = null;
+    private Date aksamDate = null;
+    private Date yatsiDate  = null;
+
+    private String gunes = null;
+    private String ogle = null;
+    private String ikindi = null;
+    private String aksam = null;
+    private String yatsi = null;
+    private String tarih = null;
+
+    String todayString = null;
+
+    Time obj3;
+
+    String times;
+
+    // SharedPreferences doldurulmak üzere nesne tanımlanıyor. Eğer willBeSaved false ise hiç yaratılmayacak.
+    StringBuilder stringToSave = null;
 
     // Bu constructer, pars işlemi içi 2 türlü kullanılıyor.
     // İlki SharedPreferences doludur ve veriler FetchData ile çekilip liste bu constructor'a willBeSaved = false olarak aktarılır.
@@ -52,9 +77,10 @@ public class ParsData {
 
     private static DateFormat formatterForDateHour = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
     private static SimpleDateFormat formatterForDate = new SimpleDateFormat("dd.MM.yyyy");
-    private static SimpleDateFormat formatterForHour = new SimpleDateFormat("HH:mm:ss");
 
     private final static String SECOND_STRING = ":00";
+
+    ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(1);
 
     public ParsData(Context context, MainActivity activity, List<Time> fetchedlist, boolean willBeSaved, ProgressDialog progressDialog) throws ParseException {
 
@@ -63,8 +89,7 @@ public class ParsData {
 
         final int sizeOfTimes = fetchedlist.size();
 
-        // SharedPreferences doldurulmak üzere nesne tanımlanıyor. Eğer willBeSaved false ise hiç yaratılmayacak.
-        StringBuilder stringToSave = null;
+
 
         if ( willBeSaved ) {
             stringToSave = new StringBuilder("[");
@@ -72,19 +97,18 @@ public class ParsData {
 
         for (int z = 0; z < sizeOfTimes; z++) {
 
+            obj3 = fetchedlist.get(z);
 
-            Time obj3 = fetchedlist.get(z);
-
-            final String gunes = obj3.getGünes();
-            final String ogle = obj3.getOgle();
-            final String ikindi = obj3.getIkindi();
-            final String aksam = obj3.getAksam();
-            final String yatsi = obj3.getYatsi();
-            final String tarih = obj3.getTarih();
+            gunes = obj3.getGünes();
+            ogle = obj3.getOgle();
+            ikindi = obj3.getIkindi();
+            aksam = obj3.getAksam();
+            yatsi = obj3.getYatsi();
+            tarih = obj3.getTarih();
 
             if ( willBeSaved ) {
 
-                String times = "{\n" +
+                 times = "{\n" +
                         "tarih:" + "\"" + tarih + "\"" +  ",\n" +
                         "gunes:" + "\"" + gunes + "\"" +  ",\n" +
                         "ogle:" + "\"" + ogle + "\"" +  ",\n" +
@@ -107,7 +131,7 @@ public class ParsData {
 
 
             // For döngüsünde bugünün vakitlerine ulaşıp Parse etmek için bugünün tarihini buluyoruz.
-            String todayString = getTodayDateString();
+            todayString = getTodayDateString();
             if (context != null && activity != null) {
                 TextView todayTextView = ((Activity) context).findViewById(R.id.today);
                 todayTextView.setText(todayString);
@@ -115,17 +139,17 @@ public class ParsData {
 
             if (tarih.equals(todayString)) {
 
-                Date gunesDate = formatterForDateHour.parse(todayString + " " + gunes + SECOND_STRING);
-                Date ogleDate = formatterForDateHour.parse(todayString + " " + ogle + SECOND_STRING);
-                Date ikindiDate = formatterForDateHour.parse(todayString + " " + ikindi + SECOND_STRING);
-                Date aksamDate = formatterForDateHour.parse(todayString + " " + aksam + SECOND_STRING);
-                Date yatsiDate = formatterForDateHour.parse(todayString + " " + yatsi + SECOND_STRING);
-                Date nowDate = formatterForDateHour.parse(getTodayDateStringWithSecond());
+                gunesDate = formatterForDateHour.parse(todayString + " " + gunes + SECOND_STRING);
+                ogleDate = formatterForDateHour.parse(todayString + " " + ogle + SECOND_STRING);
+                ikindiDate = formatterForDateHour.parse(todayString + " " + ikindi + SECOND_STRING);
+                aksamDate = formatterForDateHour.parse(todayString + " " + aksam + SECOND_STRING);
+                yatsiDate = formatterForDateHour.parse(todayString + " " + yatsi + SECOND_STRING);
+                nowDate = formatterForDateHour.parse(getTodayDateStringWithSecond());
 
                 if ( nowDate.before(gunesDate) ) {
 
 
-                    int diffInMillies =(int)(Math.abs(nowDate.getTime() - gunesDate.getTime()));
+                    diffInMillies = (gunesDate.getTime() - nowDate.getTime());
 
                     if (context != null && activity != null) {
                         this.promptTimeAndRemaining(getTimeRemainingString(diffInMillies), "Güneş");
@@ -137,7 +161,7 @@ public class ParsData {
 
                 } else if ( nowDate.before(ogleDate)) {
 
-                    int diffInMillies =(int)(Math.abs(nowDate.getTime() - ogleDate.getTime()));
+                    diffInMillies =(ogleDate.getTime() - nowDate.getTime());
 
                     if (context != null && activity != null) {
                         this.promptTimeAndRemaining(getTimeRemainingString(diffInMillies), "Öğle");
@@ -147,17 +171,16 @@ public class ParsData {
 
                 } else if ( nowDate.before(ikindiDate)) {
 
-                    int diffInMillies =(int)(Math.abs(nowDate.getTime() - ikindiDate.getTime()));
+                    diffInMillies = (ikindiDate.getTime() - nowDate.getTime());
+
                     if (context != null && activity != null) {
                         this.promptTimeAndRemaining(getTimeRemainingString(diffInMillies), "İkindi");
                     }
                     runTimer(ikindiDate, "İkindi");
 
-                    Log.e("ZIC", "TIM");
-
                 } else if ( nowDate.before(aksamDate)) {
 
-                    int diffInMillies =(int)(Math.abs(nowDate.getTime() - aksamDate.getTime()));
+                    diffInMillies =(aksamDate.getTime() - nowDate.getTime());
                     if (context != null && activity != null) {
                         this.promptTimeAndRemaining(getTimeRemainingString(diffInMillies), "Akşam");
                     }
@@ -165,7 +188,7 @@ public class ParsData {
 
                 } else if ( nowDate.before(yatsiDate)) {
 
-                    int diffInMillies =(int)(Math.abs(nowDate.getTime() - yatsiDate.getTime()));
+                    diffInMillies =(yatsiDate.getTime() - nowDate.getTime());
                     if (context != null && activity != null) {
                         this.promptTimeAndRemaining(getTimeRemainingString(diffInMillies), "Yatsı");
                     }
@@ -182,7 +205,7 @@ public class ParsData {
 
                     Date tomorrowGunesDate = formatterForDateHour.parse(tomorrowString + " " + fetchedlist.get(z+1).getGünes() + SECOND_STRING);
 
-                    int diffInMillies =(int)(Math.abs(nowDate.getTime() - tomorrowGunesDate.getTime()));
+                    diffInMillies = (tomorrowGunesDate.getTime() - nowDate.getTime());
                     if (context != null && activity != null) {
                         this.promptTimeAndRemaining(getTimeRemainingString(diffInMillies), "Güneş");
                     }
@@ -260,93 +283,84 @@ public class ParsData {
 
     private void runTimer( Date vakitDate , String vakitName) {
 
-        int delay = 1000;
-        int period = 1000;
-        final Timer time = new Timer();
 
-
-        time.scheduleAtFixedRate(new TimerTask() {
-
+        scheduledExecutor.scheduleAtFixedRate(new Runnable() {
+            @Override
             public void run() {
 
-                Date nowDate = null;
+                nowDate = null;
                 try {
                     nowDate = formatterForDateHour.parse(getTodayDateStringWithSecond());
                 } catch (ParseException e) {
                     Log.e("ERR", e.toString());
                 }
 
-                long diffInMillies = (Math.abs(nowDate.getTime() - vakitDate.getTime()));
+                if (nowDate == null) {
 
-                if ( diffInMillies == 0 && activity != null) { // Uygulama ekranı açık vaziyette.
-
-                    activity.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-
-                            new FetchData(context, activity);
-
-                        }
-                    });
-
-                    time.cancel();
-                    time.purge();
-
-                } else if (diffInMillies == 0) { // Servis çalışıyor.
-
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-
-                            new FetchData(context, activity);
-
-                        }
-                    });
-
-                    Log.e(TAG, "Vakit bitti, yeni zamana geçilecek.");
-
-                    time.cancel();
-                    time.purge();
-
-                }
-
-                if (activity != null && diffInMillies > 0) {
-
-                    activity.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-
-                            promptTimeAndRemaining(getTimeRemainingString(diffInMillies), vakitName);
-
-                        }
-                    });
-
-                } else {
-
-                    Log.e("TEST",  nowDate.getTime() + " to " + vakitDate.getTime());
-
-                    Log.e(TAG, diffInMillies + " to " + vakitName);
-
-                }
-
-                if ( diffInMillies == (1000 * 60 * 30) ) {
-
-                    Log.e(TAG,"Yarım saat to " + vakitName);
-
-                    if (activity != null) {
+                    if ( activity != null) { // Uygulama ekranı açık vaziyette.
 
                         activity.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
 
-
-                                Toast.makeText(context, vakitName + " vaktine yarım saat kaldı kardeşim.", Toast.LENGTH_SHORT).show();
-
+                                new FetchData(context, activity);
 
                             }
                         });
 
-                    } else {
+                        scheduledExecutor.shutdown();
+
+                    } else { // Servis çalışıyor.
+
+
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+
+                                new FetchData(context, null);
+
+                            }
+                        });
+
+                        Log.e(TAG, "Date null geldi. işlemler durdurulup yeniden başlatılacak.");
+                        scheduledExecutor.shutdown();
+
+                    }
+
+                } else {
+
+                    diffInMillies = (vakitDate.getTime() - nowDate.getTime());
+
+                    if (diffInMillies < 0 && activity != null) { // Uygulama ekranı açık vaziyette.
+
+
+                        activity.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+
+                                new FetchData(context, activity);
+
+                            }
+                        });
+
+                        scheduledExecutor.shutdown();
+                        return;
+
+                    } else if (diffInMillies < 0) { // Servis çalışıyor.
+
+
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+
+                                new FetchData(context, null);
+
+                            }
+                        });
+
+                        Log.e(TAG, "Vakit bitti, yeni zamana geçilecek.");
+
+                        scheduledExecutor.shutdown();
 
                         // TODO push notification
 
@@ -359,23 +373,45 @@ public class ParsData {
                                 .setDefaults(Notification.DEFAULT_ALL)
                                 .setWhen(System.currentTimeMillis())
                                 .setSmallIcon(R.mipmap.ic_launcher)
-                                .setTicker(vakitName + " vaktine 30 dakika kaldı kardeşim.")
+                                .setTicker(vakitName + " vakti girdi kardeşim.")
                                 .setContentTitle("Namaz 7/24")
-                                .setContentText(vakitName + " vaktine 30 dakika kaldı kardeşim.")
-                                .setDefaults(Notification.DEFAULT_LIGHTS| Notification.DEFAULT_SOUND)
+                                .setContentText(vakitName + " vakti girdi kardeşim.")
+                                .setDefaults(Notification.DEFAULT_LIGHTS | Notification.DEFAULT_SOUND)
                                 .setContentIntent(contentIntent)
                                 .setContentInfo("Info");
 
                         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
                         notificationManager.notify(1, b.build());
 
+                        return;
+
                     }
 
+                    if (activity != null && diffInMillies > 0) {
+
+                        activity.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+
+                                promptTimeAndRemaining(getTimeRemainingString(diffInMillies), vakitName);
+
+                            }
+                        });
+
+                    } else {
+
+                        // Log.e("TEST", nowDate.getTime() + " to " + vakitDate.getTime());
+
+                        Log.e(TAG, diffInMillies + " to " + vakitName);
+
+                    }
 
                 }
 
             }
-        }, delay, period);
+        }, 0, 1, TimeUnit.SECONDS);
+
+
 
     }
 
